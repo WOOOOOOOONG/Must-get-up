@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/misson1"
+        android:title="랜덤 전화"/>
+    <item
+        android:id="@+id/misson2"
+        android:title="랜덤 문자"/>
+    <item
+        android:id="@+id/misson3"
+        android:title="효자/효녀는 웁니다"/>
+</menu>
