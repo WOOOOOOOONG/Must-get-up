@@ -21,40 +21,13 @@ class MainActivity : AppCompatActivity() {
 
         // 뷰를 초기화 해주기
         initOnOffButton()
-        //initChangeAlarmTimeButton()
 
         // 저장된 데이터 가져오기
         val model = fetchDataFromSharedPreferences()
+        val model2 = fetchDataFromSharedPreferences2()
         // 뷰에 데이터를 그려주기
         renderView(model)
-
-        // 미션 메뉴
-        val mission = findViewById<Button>(R.id.mission)
-        mission.setOnClickListener {
-            var popupMenu = PopupMenu(applicationContext, it)
-
-            menuInflater?.inflate(R.menu.alarm_menu, popupMenu.menu)
-            popupMenu.show()
-            popupMenu.setOnMenuItemClickListener {
-                when (it.itemId) {
-                    R.id.misson1 -> {
-                        Toast.makeText(applicationContext, "'랜덤 전화'를 선택하셨습니다", Toast.LENGTH_SHORT).show()
-                        return@setOnMenuItemClickListener true
-                    }
-                    R.id.misson2 -> {
-                        Toast.makeText(applicationContext, "'랜덤 문자'를 선택하셨습니다", Toast.LENGTH_SHORT).show()
-                        return@setOnMenuItemClickListener true
-                    }
-                    R.id.misson3 -> {
-                        Toast.makeText(applicationContext, "'효자/효녀는 웁니다'를 선택하셨습니다", Toast.LENGTH_SHORT).show()
-                        return@setOnMenuItemClickListener true
-                    }
-                    else -> {
-                        return@setOnMenuItemClickListener false
-                    }
-                }
-            }
-        }
+        renderView2(model2)
     }
 
 
@@ -90,6 +63,23 @@ class MainActivity : AppCompatActivity() {
         return alarmModel
     }
 
+    private fun fetchDataFromSharedPreferences2(): String {
+        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+
+        // DB 에서 데이터 가져오기
+        val missionDBValue = sharedPreferences.getString(M_MISSION, "현재 미션 : 랜덤 문자")
+
+        // 보정 조정 예외처 (브로드 캐스트 가져오기)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            M_ALARM_REQUEST_CODE,
+            Intent(this, AlarmReceiver::class.java),
+            PendingIntent.FLAG_NO_CREATE
+        ) // 있으면 가져오고 없으면 안만든다. (null)
+
+        return missionDBValue.toString()
+    }
+
     @Override
     public fun onClick1(v: View) {
         v.setOnClickListener {
@@ -113,29 +103,68 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 시간 재설정 버튼.
-    /*private fun initChangeAlarmTimeButton() {
-        val changeAlarmButton = findViewById<Button>(R.id.clock)
-        changeAlarmButton.setOnClickListener {
-            // 현재 시간을 가져오기 위해 캘린더 인스터늣 사
-            val calendar = Calendar.getInstance()
-            // TimePickDialog 띄워줘서 시간을 설정을 하게끔 하고, 그 시간을 가져와서
-            TimePickerDialog(this, { picker, hour, minute ->
+    public fun onClick2(b: View) {
+        b.setOnClickListener {
+            var popupMenu = PopupMenu(applicationContext, it)
+            menuInflater?.inflate(R.menu.alarm_menu, popupMenu.menu)
+            popupMenu.show()
+            popupMenu.setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.misson1 -> {
+                        Toast.makeText(applicationContext, "'랜덤 전화'를 선택하셨습니다", Toast.LENGTH_SHORT)
+                            .show()
+                        b.findViewById<Button>(R.id.mission).setText("현재 미션 : 랜덤 전화")
 
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
 
-                // 데이터를 저장
-                val model = saveAlarmModel(hour, minute, false)
-                // 뷰를 업데이트
-                renderView(model)
+                        // edit 모드로 열어서 작업 (값 저장)
+                        with(sharedPreferences.edit()) {
+                            putString(M_MISSION, b.findViewById<Button>(R.id.mission).text.toString())
+                            commit()
+                        }
 
-                // 기존에 있던 알람을 삭제한다.
-                cancelAlarm()
+                        return@setOnMenuItemClickListener true
+                    }
+                    R.id.misson2 -> {
+                        Toast.makeText(applicationContext, "'랜덤 문자'를 선택하셨습니다", Toast.LENGTH_SHORT)
+                            .show()
+                        b.findViewById<Button>(R.id.mission).setText("현재 미션 : 랜덤 문자")
 
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false)
-                .show()
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
 
+                        // edit 모드로 열어서 작업 (값 저장)
+                        with(sharedPreferences.edit()) {
+                            putString(M_MISSION, b.findViewById<Button>(R.id.mission).text.toString())
+                            commit()
+                        }
+
+                        return@setOnMenuItemClickListener true
+                    }
+                    R.id.misson3 -> {
+                        Toast.makeText(
+                            applicationContext,
+                            "'효자/효녀는 웁니다'를 선택하셨습니다",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        b.findViewById<Button>(R.id.mission).setText("현재 미션 : 효자/효녀는 웁니다")
+
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+
+                        // edit 모드로 열어서 작업 (값 저장)
+                        with(sharedPreferences.edit()) {
+                            putString(M_MISSION, b.findViewById<Button>(R.id.mission).text.toString())
+                            commit()
+                        }
+
+                        return@setOnMenuItemClickListener true
+                    }
+                    else -> {
+                        return@setOnMenuItemClickListener false
+                    }
+                }
+            }
         }
-    }*/
+    }
 
     // 알람 켜기 끄기 버튼.
     private fun initOnOffButton() {
@@ -204,6 +233,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun renderView2(mission: String) {
+        // 최초 실행 또는 시간 재설정 시 들어옴
+
+        findViewById<Button>(R.id.mission).apply {
+            text = mission
+        }
+    }
+
     private fun cancelAlarm() {
         // 기존에 있던 알람을 삭제한다.
         val pendingIntent = PendingIntent.getBroadcast(
@@ -248,6 +285,7 @@ class MainActivity : AppCompatActivity() {
         private const val M_SHARED_PREFERENCE_NAME = "time"
         private const val M_ALARM_KEY = "alarm"
         private const val M_ONOFF_KEY = "onOff"
+        private const val M_MISSION = "mission"
         private val M_ALARM_REQUEST_CODE = 1000
     }
 }
