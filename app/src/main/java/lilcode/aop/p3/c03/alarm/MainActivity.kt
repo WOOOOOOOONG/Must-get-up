@@ -1,21 +1,49 @@
 package lilcode.aop.p3.c03.alarm
 
+import android.Manifest
+import android.R.attr.data
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.Cursor
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
+import android.telephony.PhoneNumberUtils
+import android.telephony.TelephonyManager
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+    val MY_PERMISSION_ACCESS_ALL = 100
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 권한 설정
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            var permissions = arrayOf(
+                android.Manifest.permission.CALL_PHONE,
+                android.Manifest.permission.READ_PHONE_STATE,
+                android.Manifest.permission.READ_SMS,
+                android.Manifest.permission.READ_PHONE_NUMBERS,
+                android.Manifest.permission.READ_CONTACTS,
+                android.Manifest.permission.INTERNET,
+            )
+            ActivityCompat.requestPermissions(this, permissions, MY_PERMISSION_ACCESS_ALL)
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -25,9 +53,27 @@ class MainActivity : AppCompatActivity() {
         // 저장된 데이터 가져오기
         val model = fetchDataFromSharedPreferences()
         val model2 = fetchDataFromSharedPreferences2()
+
         // 뷰에 데이터를 그려주기
         renderView(model)
         renderView2(model2)
+    }
+
+    // 권한 받기
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode === MY_PERMISSION_ACCESS_ALL) {
+            if (grantResults.size > 0) {
+                for (grant in grantResults) {
+                    if (grant != PackageManager.PERMISSION_GRANTED) System.exit(0)
+                }
+            }
+        }
     }
 
 
@@ -164,6 +210,66 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+
+    // 랜덤으로 전화 걸기
+    @Override
+    public fun onClickCallListener(v: View) {
+        v.setOnClickListener {
+            val telNumber = getPhoneNumber()
+            /*val intent = Intent(Intent.ACTION_CALL, Uri.parse(telNumber))
+            //Log.d("Test", "number: $telNumber")
+            startActivity(intent)*/
+
+            // 어디에 전화를 걸건지 text 정보 받기
+            val permissionListener = object : PermissionListener {
+                fun onPermissionGranted() {
+
+                    val myUri = Uri.parse("tel:${telNumber}")
+                    val myIntent = Intent(Intent.ACTION_CALL, myUri)
+                    startActivity(myIntent)
+
+                }
+
+                fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+                    Toast.makeText(mContext,"전화 연결 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
+
+                }
+
+            }
+
+            TedPermission.with(mContext)
+                .setPermissionListener(permissionListener)
+                .setDeniedMessage("[설정] 에서 권한을 열어줘야 전화 연결이 가능합니다.")
+                .setPermissions(Manifest.permission.CALL_PHONE)
+                .check()
+        }
+    }
+
+    data class Contact(
+        val id : String ,
+        val name : String,
+        val number : String)
+
+    @SuppressLint("Range")
+    fun getPhoneNumber(): String? {
+        val names: MutableList<Contact> = arrayListOf()
+        val cr = contentResolver
+        val cur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+            null, null, null)
+        if (cur!!.count > 0) {
+            while (cur.moveToNext()) {
+                val id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NAME_RAW_CONTACT_ID))
+                val name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val number = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                names.add(Contact(id , name , number))
+            }
+        }
+
+        val range = (0..names.size-1)
+
+        return names.get(range.random()).number
     }
 
     // 알람 켜기 끄기 버튼.
