@@ -245,7 +245,7 @@
         android:layout_marginBottom="16dp"
         android:backgroundTint="#434242"
         android:onClick="onClickCallListener"
-        android:text="전화하기"
+        android:text="문자보내기 테스트"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -2,15 +2,20 @@ package lilcode.aop.p3.c03.alarm
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.TimePickerDialog
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.telephony.SmsManager
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
@@ -18,6 +23,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.TedPermission
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -28,12 +35,14 @@ class MainActivity : AppCompatActivity() {
         // 권한 설정
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            var permissions = arrayOf(
+            val permissions = arrayOf(
                 android.Manifest.permission.CALL_PHONE,
                 android.Manifest.permission.READ_PHONE_STATE,
                 android.Manifest.permission.READ_SMS,
                 android.Manifest.permission.READ_PHONE_NUMBERS,
                 android.Manifest.permission.READ_CONTACTS,
+                android.Manifest.permission.WRITE_CONTACTS,
+                android.Manifest.permission.SEND_SMS,
                 android.Manifest.permission.INTERNET,
             )
             ActivityCompat.requestPermissions(this, permissions, MY_PERMISSION_ACCESS_ALL)
@@ -71,7 +80,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    // 이전 데이터 저장1(알람 on/off)
     private fun fetchDataFromSharedPreferences(): AlarmDisplayModel {
         val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
 
@@ -104,6 +113,7 @@ class MainActivity : AppCompatActivity() {
         return alarmModel
     }
 
+    // 이전 데이터 저장2(미션 설정)
     private fun fetchDataFromSharedPreferences2(): String {
         val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
 
@@ -121,6 +131,7 @@ class MainActivity : AppCompatActivity() {
         return missionDBValue.toString()
     }
 
+    // onclick : 시간 변경
     @Override
     public fun onClick1(v: View) {
         v.setOnClickListener {
@@ -144,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // onclick : 미션 선택 후 저장 및 토스트
     public fun onClick2(b: View) {
         b.setOnClickListener {
             var popupMenu = PopupMenu(applicationContext, it)
@@ -207,52 +219,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    // 랜덤으로 전화 걸기
+    // 미션1: 랜덤으로 전화 걸기
     @Override
-    public fun onClickCallListener(v: View) {
-        v.setOnClickListener {
-            val telNumber = getPhoneNumber()
-            /*val intent = Intent(Intent.ACTION_CALL, Uri.parse(telNumber))
-            //Log.d("Test", "number: $telNumber")
-            startActivity(intent)*/
-            if(intent.resolveActivity(packageManager) != null){
-                startActivity(intent)
+    public fun callMission() {
+        val telNumber = getPhoneNumber()
+        val permissionListener = object : PermissionListener {
+            override fun onPermissionGranted() {
+
+                val myUri = Uri.parse("tel:${telNumber}")
+                val myIntent = Intent(Intent.ACTION_CALL, myUri)
+                startActivity(myIntent)
+
             }
 
-            // 어디에 전화를 걸건지 text 정보 받기
-            /*val permissionListener = object : PermissionListener {
-                override fun onPermissionGranted() {
+            override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+                Toast.makeText(mContext,"전화 연결 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    val myUri = Uri.parse("tel:${telNumber}")
-                    val myIntent = Intent(Intent.ACTION_CALL, myUri)
-                    startActivity(myIntent)
+            }
 
-                }
-
-                override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
-                    Toast.makeText(mContext,"전화 연결 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
-
-                }
-
-            }*/
-            /* with 안돼서 삭제
-            TedPermission.with(mContext)
-                .setPermissionListener(permissionListener)
-                .setDeniedMessage("[설정] 에서 권한을 열어줘야 전화 연결이 가능합니다.")
-                .setPermissions(Manifest.permission.CALL_PHONE)
-                .check()
-            */
         }
+        TedPermission.with(mContext)
+            .setPermissionListener(permissionListener)
+            .setDeniedMessage("[설정] 에서 권한을 열어줘야 전화 연결이 가능합니다.")
+            .setPermissions(Manifest.permission.CALL_PHONE)
+            .check()
     }
 
-    data class Contact(
-        val id : String ,
-        val name : String,
-        val number : String)
-
+    // 미션을 위한 전화번호 얻기 함수
     @SuppressLint("Range")
-    fun getPhoneNumber(): String? {
+    private fun getPhoneNumber(): String? {
         val names: MutableList<Contact> = arrayListOf()
         val cr = contentResolver
         val cur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
@@ -269,6 +264,52 @@ class MainActivity : AppCompatActivity() {
         val range = (0..names.size-1)
 
         return names.get(range.random()).number
+    }
+
+    // 미션2: 메시지 보내기
+    public fun submitMessageMission() {
+        val telNumber = getPhoneNumber()
+        val intentSent: Intent = Intent("SMS_SENT_ACTION")
+        val intentDelivery: Intent = Intent("SMS_DELIVERED_ACTION")
+        val sentIntent = PendingIntent.getBroadcast(this, 0, intentSent, 0)
+        val deliveredIntent = PendingIntent.getBroadcast(this, 0, intentDelivery, 0)
+
+        registerReceiver(object: BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (resultCode) {
+                    Activity.RESULT_OK -> {
+                        Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT)
+                    }
+                    SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
+                        Toast.makeText(context, "전송 실패", Toast.LENGTH_SHORT)
+                    }
+                    SmsManager.RESULT_ERROR_NO_SERVICE -> {
+                        Toast.makeText(context, "서비스 지역이 아닙니다", Toast.LENGTH_SHORT)
+                    }
+                    SmsManager.RESULT_ERROR_RADIO_OFF -> {
+                        Toast.makeText(context, "휴대폰이 꺼져있습니다", Toast.LENGTH_SHORT)
+                    }
+                    SmsManager.RESULT_ERROR_NULL_PDU -> {
+                        Toast.makeText(context, "PDU Null", Toast.LENGTH_SHORT)
+                    }
+                }
+            }
+        }, IntentFilter("SMS_SENT_ACTION"))
+        // SMS가 도착했을 때 실행
+        registerReceiver(object: BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                when (resultCode) {
+                    Activity.RESULT_OK -> {
+                        Toast.makeText(context, "SMS 도착 완료", Toast.LENGTH_SHORT)
+                    }
+                    Activity.RESULT_CANCELED -> {
+                        Toast.makeText(context, "SMS 도착 실패", Toast.LENGTH_SHORT)
+                    }
+                }
+            }
+        }, IntentFilter("SMS_DELIVERED_ACTION"))
+        val SmsManager = SmsManager.getDefault()
+        SmsManager.sendTextMessage(getPhoneNumber(), null, "당신 생각이 나서 연락했어요..", sentIntent, deliveredIntent)
     }
 
     // 알람 켜기 끄기 버튼.
@@ -323,6 +364,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 저장된 시간을 화면에 표시
     private fun renderView(model: AlarmDisplayModel) {
         // 최초 실행 또는 시간 재설정 시 들어옴
 
@@ -338,6 +380,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 저장된 미션을 화면에 표시
     private fun renderView2(mission: String) {
         // 최초 실행 또는 시간 재설정 시 들어옴
 
@@ -346,6 +389,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 알람 off
     private fun cancelAlarm() {
         // 기존에 있던 알람을 삭제한다.
         val pendingIntent = PendingIntent.getBroadcast(
@@ -358,6 +402,7 @@ class MainActivity : AppCompatActivity() {
         pendingIntent?.cancel() // 기존 알람 삭제
     }
 
+    // 알람 시간 DB에 저장
     private fun saveAlarmModel(hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
         val model = AlarmDisplayModel(
             hour = hour,
@@ -378,6 +423,7 @@ class MainActivity : AppCompatActivity() {
         return model
     }
 
+    // 알람 설정하기 위한 화면 표시
     private fun showPopup(v: View) {
         val popup = PopupMenu(this, v)
         popup.menuInflater.inflate(R.menu.alarm_menu, popup.menu)
@@ -385,12 +431,19 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    // 미션을 위한 전화번호 클래스
+    data class Contact(
+        val id : String ,
+        val name : String,
+        val number : String)
+
+    // 기타 필요한 변수들
     companion object {
         // static 영역 (상수 지정)
         private const val M_SHARED_PREFERENCE_NAME = "time"
         private const val M_ALARM_KEY = "alarm"
         private const val M_ONOFF_KEY = "onOff"
         private const val M_MISSION = "mission"
-        private val M_ALARM_REQUEST_CODE = 1000
+        private const val M_ALARM_REQUEST_CODE = 1000
     }
 }
