@@ -1,7 +1,6 @@
 package lilcode.aop.p3.c03.alarm
 
 import android.Manifest
-import android.R.attr.data
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -9,14 +8,9 @@ import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.telephony.PhoneNumberUtils
-import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
@@ -28,6 +22,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
     val MY_PERMISSION_ACCESS_ALL = 100
+    val mContext = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // 권한 설정
@@ -221,10 +216,13 @@ class MainActivity : AppCompatActivity() {
             /*val intent = Intent(Intent.ACTION_CALL, Uri.parse(telNumber))
             //Log.d("Test", "number: $telNumber")
             startActivity(intent)*/
+            if(intent.resolveActivity(packageManager) != null){
+                startActivity(intent)
+            }
 
             // 어디에 전화를 걸건지 text 정보 받기
-            val permissionListener = object : PermissionListener {
-                fun onPermissionGranted() {
+            /*val permissionListener = object : PermissionListener {
+                override fun onPermissionGranted() {
 
                     val myUri = Uri.parse("tel:${telNumber}")
                     val myIntent = Intent(Intent.ACTION_CALL, myUri)
@@ -232,18 +230,19 @@ class MainActivity : AppCompatActivity() {
 
                 }
 
-                fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+                override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
                     Toast.makeText(mContext,"전화 연결 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
 
                 }
 
-            }
-
+            }*/
+            /* with 안돼서 삭제
             TedPermission.with(mContext)
                 .setPermissionListener(permissionListener)
                 .setDeniedMessage("[설정] 에서 권한을 열어줘야 전화 연결이 가능합니다.")
                 .setPermissions(Manifest.permission.CALL_PHONE)
                 .check()
+            */
         }
     }
 
