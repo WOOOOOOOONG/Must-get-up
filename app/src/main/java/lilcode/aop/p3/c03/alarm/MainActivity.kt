@@ -2,10 +2,7 @@ package lilcode.aop.p3.c03.alarm
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.app.TimePickerDialog
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -15,7 +12,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.telephony.SmsManager
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
@@ -216,6 +212,28 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    // onclick : 설명 창
+    public fun onClickIntro(b: View) {
+        b.setOnClickListener {
+            val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+            val text: String = """
+                -이 앱은 기본적으로 1개의 알람을 지정할 수 있으며, 매일 반복될 것입니다.
+                
+                -개발자는 절대로 사용자의 기기에 임의로 접근하여 탈취하지 않습니다.
+                
+                -미션에 따라, 최초 알람으로부터 10분 이내에 일어나지 않을 시 벌칙 내용입니다.
+                ■랜덤 전화 : 당신의 전화번호부에 있는 사람에게 랜덤으로 전화가 갑니다. 선생님, 교수님 또는 직장 상사에게 전화가 간다면 재밌겠죠?
+                ■랜덤 문자 : 당신의 전화번호부에 있는 사람에게 랜덤으로 "당신 생각이 나서 연락했어요.." 라는 내용의 문자 메시지가 전송됩니다.
+                ■내가 설정한 노래가 아니야 : j-pop이 굉장히 크게 틉니다. 혹시 옆 방에 계신 분도 들릴지도? 
+            """.trimIndent()
+            builder.setTitle("앱 설명").setMessage(text)
+
+            val alertDialog: AlertDialog = builder.create()
+
+            alertDialog.show()
         }
     }
 
@@ -429,7 +447,6 @@ class MainActivity : AppCompatActivity() {
         popup.menuInflater.inflate(R.menu.alarm_menu, popup.menu)
         popup.show()
     }
-
 
     // 미션을 위한 전화번호 클래스
     data class Contact(
