@@ -1,241 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_black"
-    tools:context=".MainActivity">
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_margin="4dp"
+app:cardCornerRadius="8dp">
 
-    <!--    app:layout_constraintDimensionRatio="H,1:1" : 1대1 비율 지정.-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="1dp"
-        android:background="#FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.097" />
+        <TextView
+            android:id="@+id/dial_tv_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="이 앱을 평가해주세요!"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.492"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/music"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:backgroundTint="#222121"
-        android:fontFamily="@font/anton"
-        android:text="@string/music"
-        android:textColor="#FF9800"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/repeat"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <Button
-        android:id="@+id/intro"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:backgroundTint="#222121"
-        android:fontFamily="@font/anton"
-        android:text="@string/intro"
-        android:textAllCaps="false"
-        android:textColor="#FF9800"
-        android:textStyle="bold"
-        android:onClick="onClickIntro"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/repeat"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="4dp"
-        android:layout_marginBottom="50dp"
-        android:fontFamily="@font/anton"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toStartOf="@+id/intro"
-        app:layout_constraintStart_toEndOf="@+id/music"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        tools:text="반복" />
-
-    <Button
-        android:id="@+id/mon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="@string/mon"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toStartOf="@+id/intro"
-        app:layout_constraintHorizontal_bias="0.142"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0"
-        tools:text="월" />
-
-    <Button
-        android:id="@+id/tue"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="화"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toStartOf="@+id/intro"
-        app:layout_constraintHorizontal_bias="0.328"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0"
-        tools:ignore="DuplicateSpeakableTextCheck" />
-
-    <Button
-        android:id="@+id/wen"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="수"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toStartOf="@+id/intro"
-        app:layout_constraintHorizontal_bias="0.513"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/thu"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="목"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toStartOf="@+id/intro"
-        app:layout_constraintHorizontal_bias="0.698"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/fri"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="금"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.63"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/sat"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="토"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.765"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/sun"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:backgroundTint="#292727"
-        android:fontFamily="@font/anton"
-        android:text="일"
-        app:layout_constraintBottom_toTopOf="@+id/clock"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.895"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/repeat"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <View
-        android:id="@+id/clock"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="100dp"
-        android:layout_marginEnd="50dp"
-        android:background="@drawable/background_white_ring"
-        android:contentDescription="@string/app_name"
-        android:onClick="onClick1"
-        app:layout_constraintBottom_toTopOf="@id/onOffButton"
-        app:layout_constraintDimensionRatio="H,1:1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.501" />
-
-    <TextView
-        android:id="@+id/timeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="70dp"
-        android:textColor="@color/white"
-        android:textSize="50sp"
-        app:layout_constraintBottom_toTopOf="@id/ampmTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:text="09:30" />
-
-    <TextView
-        android:id="@+id/ampmTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:textSize="25sp"
-        app:layout_constraintBottom_toTopOf="@id/onOffButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timeTextView"
-        tools:text="AM" />
-
-    <Button
-        android:id="@+id/onOffButton"
-        android:layout_width="409dp"
-        android:layout_height="48dp"
-        android:layout_marginBottom="4dp"
-        android:backgroundTint="#434242"
-        android:text="@string/on_alarm"
-        app:layout_constraintBottom_toTopOf="@id/mission"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:text="현재 : " />
-
-    <Button
-        android:id="@+id/mission"
-        android:layout_width="409dp"
-        android:layout_height="48dp"
-        android:layout_marginBottom="52dp"
-        android:backgroundTint="#434242"
-        android:onClick="onClick2"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:text="@string/mission" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
