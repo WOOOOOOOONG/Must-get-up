@@ -12,11 +12,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.telephony.SmsManager
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.gun0912.tedpermission.PermissionListener
@@ -59,22 +61,9 @@ class MainActivity : AppCompatActivity() {
         renderView2(model2)
     }
 
-    // 권한 받기
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode === MY_PERMISSION_ACCESS_ALL) {
-            if (grantResults.size > 0) {
-                for (grant in grantResults) {
-                    if (grant != PackageManager.PERMISSION_GRANTED) System.exit(0)
-                }
-            }
-        }
-    }
+    /******************************************************************
+     * ************************데이터 저장*******************************
+     * ****************************************************************/
 
     // 이전 데이터 저장1(알람 on/off)
     private fun fetchDataFromSharedPreferences(): AlarmDisplayModel {
@@ -126,6 +115,31 @@ class MainActivity : AppCompatActivity() {
 
         return missionDBValue.toString()
     }
+
+    // 알람 시간 DB에 저장
+    private fun saveAlarmModel(hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
+        val model = AlarmDisplayModel(
+            hour = hour,
+            minute = minute,
+            onOff = onOff
+        )
+
+        // time 에 대한 db 파일 생성
+        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+
+        // edit 모드로 열어서 작업 (값 저장)
+        with(sharedPreferences.edit()) {
+            putString(M_ALARM_KEY, model.makeDataForDB())
+            putBoolean(M_ONOFF_KEY, model.onOff)
+            commit()
+        }
+
+        return model
+    }
+
+    /******************************************************************
+     * ************************onClick*********************************
+     * ****************************************************************/
 
     // onclick : 시간 변경
     @Override
@@ -237,6 +251,52 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // onclick : 요일 반복 시 토스트창
+    public fun onClickWeek(v: View) {
+        v.setOnClickListener {
+            when {
+                v?.id == R.id.mon && findViewById<ToggleButton>(R.id.mon).isChecked == true
+                -> Toast.makeText(applicationContext, "월요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.mon && findViewById<ToggleButton>(R.id.mon).isChecked == false
+                -> Toast.makeText(applicationContext, "월요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.tue && findViewById<ToggleButton>(R.id.tue).isChecked == true
+                -> Toast.makeText(applicationContext, "화요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.tue && findViewById<ToggleButton>(R.id.tue).isChecked == false
+                -> Toast.makeText(applicationContext, "화요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.wen && findViewById<ToggleButton>(R.id.wen).isChecked == true
+                -> Toast.makeText(applicationContext, "수요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.wen && findViewById<ToggleButton>(R.id.wen).isChecked == false
+                -> Toast.makeText(applicationContext, "수요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.thu && findViewById<ToggleButton>(R.id.thu).isChecked == true
+                -> Toast.makeText(applicationContext, "목요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.thu && findViewById<ToggleButton>(R.id.thu).isChecked == false
+                -> Toast.makeText(applicationContext, "목요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.fri && findViewById<ToggleButton>(R.id.fri).isChecked == true
+                -> Toast.makeText(applicationContext, "금요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.fri && findViewById<ToggleButton>(R.id.fri).isChecked == false
+                -> Toast.makeText(applicationContext, "금요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.sat && findViewById<ToggleButton>(R.id.sat).isChecked == true
+                -> Toast.makeText(applicationContext, "토요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.sat && findViewById<ToggleButton>(R.id.sat).isChecked == false
+                -> Toast.makeText(applicationContext, "토요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+
+                v?.id == R.id.sun && findViewById<ToggleButton>(R.id.sun).isChecked == true
+                -> Toast.makeText(applicationContext, "일요일에 알람을 설정했습니다.", Toast.LENGTH_SHORT).show()
+                v?.id == R.id.sun && findViewById<ToggleButton>(R.id.sun).isChecked == false
+                -> Toast.makeText(applicationContext, "일요일에 알람을 해제했습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /******************************************************************
+     * *************************미션 함수*******************************
+     * ****************************************************************/
+
     // 미션1: 랜덤으로 전화 걸기
     @Override
     public fun callMission() {
@@ -330,6 +390,10 @@ class MainActivity : AppCompatActivity() {
         SmsManager.sendTextMessage(getPhoneNumber(), null, "당신 생각이 나서 연락했어요..", sentIntent, deliveredIntent)
     }
 
+    /******************************************************************
+     * ******************************알람*******************************
+     * ****************************************************************/
+
     // 알람 켜기 끄기 버튼.
     private fun initOnOffButton() {
         val onOffButton = findViewById<Button>(R.id.onOffButton)
@@ -342,6 +406,18 @@ class MainActivity : AppCompatActivity() {
 
             // 온/오프 에 따라 작업을 처리한다
             if (newModel.onOff) {
+                // 요일별 알람 등록
+                val week = booleanArrayOf(
+                    false,
+                    findViewById<ToggleButton>(R.id.sun).isChecked,
+                    findViewById<ToggleButton>(R.id.mon).isChecked,
+                    findViewById<ToggleButton>(R.id.tue).isChecked,
+                    findViewById<ToggleButton>(R.id.wen).isChecked,
+                    findViewById<ToggleButton>(R.id.thu).isChecked,
+                    findViewById<ToggleButton>(R.id.fri).isChecked,
+                    findViewById<ToggleButton>(R.id.sat).isChecked,
+                )
+
                 // 온 -> 알람을 등록
                 val calender = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, newModel.hour)
@@ -356,6 +432,7 @@ class MainActivity : AppCompatActivity() {
                 val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
                 val intent = Intent(this, AlarmReceiver::class.java)
+                intent.putExtra("day_of_week", week)
                 val pendingIntent = PendingIntent.getBroadcast(
                     this,
                     M_ALARM_REQUEST_CODE,
@@ -370,7 +447,7 @@ class MainActivity : AppCompatActivity() {
                 alarmManager.setInexactRepeating( // 정시에 반복
                     AlarmManager.RTC_WAKEUP, // RTC_WAKEUP : 실제 시간 기준으로 wakeup , ELAPSED_REALTIME_WAKEUP : 부팅 시간 기준으로 wakeup
                     calender.timeInMillis, // 언제 알람이 발동할지.
-                    AlarmManager.INTERVAL_DAY, // 하루에 한번씩.
+                    AlarmManager.INTERVAL_DAY, // 하루에 한번씩
                     pendingIntent
                 )
             } else {
@@ -420,32 +497,32 @@ class MainActivity : AppCompatActivity() {
         pendingIntent?.cancel() // 기존 알람 삭제
     }
 
-    // 알람 시간 DB에 저장
-    private fun saveAlarmModel(hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
-        val model = AlarmDisplayModel(
-            hour = hour,
-            minute = minute,
-            onOff = onOff
-        )
-
-        // time 에 대한 db 파일 생성
-        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
-
-        // edit 모드로 열어서 작업 (값 저장)
-        with(sharedPreferences.edit()) {
-            putString(M_ALARM_KEY, model.makeDataForDB())
-            putBoolean(M_ONOFF_KEY, model.onOff)
-            commit()
-        }
-
-        return model
-    }
-
     // 알람 설정하기 위한 화면 표시
     private fun showPopup(v: View) {
         val popup = PopupMenu(this, v)
         popup.menuInflater.inflate(R.menu.alarm_menu, popup.menu)
         popup.show()
+    }
+
+    /******************************************************************
+     * ******************************객체*******************************
+     * ****************************************************************/
+
+    // 권한 객체
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode === MY_PERMISSION_ACCESS_ALL) {
+            if (grantResults.size > 0) {
+                for (grant in grantResults) {
+                    if (grant != PackageManager.PERMISSION_GRANTED) System.exit(0)
+                }
+            }
+        }
     }
 
     // 미션을 위한 전화번호 클래스
