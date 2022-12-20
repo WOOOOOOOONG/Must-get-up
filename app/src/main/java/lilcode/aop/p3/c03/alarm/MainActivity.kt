@@ -23,27 +23,32 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
+import lilcode.aop.p3.c03.alarm.databinding.ActivityMainBinding
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
     val MY_PERMISSION_ACCESS_ALL = 100
     val mContext = this
 
+    val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // 권한 설정
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             val permissions = arrayOf(
-                android.Manifest.permission.CALL_PHONE,
-                android.Manifest.permission.READ_PHONE_STATE,
-                android.Manifest.permission.READ_SMS,
-                android.Manifest.permission.READ_PHONE_NUMBERS,
-                android.Manifest.permission.READ_CONTACTS,
-                android.Manifest.permission.WRITE_CONTACTS,
-                android.Manifest.permission.SEND_SMS,
-                android.Manifest.permission.INTERNET,
+                Manifest.permission.CALL_PHONE,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_SMS,
+                Manifest.permission.READ_PHONE_NUMBERS,
+                Manifest.permission.READ_CONTACTS,
+                Manifest.permission.WRITE_CONTACTS,
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.INTERNET,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
             )
             ActivityCompat.requestPermissions(this, permissions, MY_PERMISSION_ACCESS_ALL)
+
         }
 
         super.onCreate(savedInstanceState)
@@ -67,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
     // 이전 데이터 저장1(알람 on/off)
     private fun fetchDataFromSharedPreferences(): AlarmDisplayModel {
-        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
         // DB 에서 데이터 가져오기
         val timeDBValue = sharedPreferences.getString(M_ALARM_KEY, "09:30") ?: "09:30"
@@ -100,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
     // 이전 데이터 저장2(미션 설정)
     private fun fetchDataFromSharedPreferences2(): String {
-        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
         // DB 에서 데이터 가져오기
         val missionDBValue = sharedPreferences.getString(M_MISSION, "현재 미션 : 랜덤 문자")
@@ -125,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         // time 에 대한 db 파일 생성
-        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
         // edit 모드로 열어서 작업 (값 저장)
         with(sharedPreferences.edit()) {
@@ -178,7 +183,7 @@ class MainActivity : AppCompatActivity() {
                             .show()
                         b.findViewById<Button>(R.id.mission).setText("현재 미션 : 랜덤 전화")
 
-                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
                         // edit 모드로 열어서 작업 (값 저장)
                         with(sharedPreferences.edit()) {
@@ -193,7 +198,7 @@ class MainActivity : AppCompatActivity() {
                             .show()
                         b.findViewById<Button>(R.id.mission).setText("현재 미션 : 랜덤 문자")
 
-                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
                         // edit 모드로 열어서 작업 (값 저장)
                         with(sharedPreferences.edit()) {
@@ -211,7 +216,7 @@ class MainActivity : AppCompatActivity() {
                         ).show()
                         b.findViewById<Button>(R.id.mission).setText("현재 미션 : 효자/효녀는 웁니다")
 
-                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE)
+                        val sharedPreferences = getSharedPreferences(M_SHARED_PREFERENCE_NAME, MODE_PRIVATE)
 
                         // edit 모드로 열어서 작업 (값 저장)
                         with(sharedPreferences.edit()) {
@@ -293,6 +298,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // onclick : 음악 선택 창
+    public fun onClickMusic(v: View) {
+        when (v?.id) {
+            binding.music.id -> {
+                val dlg = MusicDialog(this)
+                dlg.show("hi")
+            }
+        }
+    }
+
     /******************************************************************
      * *************************미션 함수*******************************
      * ****************************************************************/
@@ -355,7 +370,7 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(object: BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (resultCode) {
-                    Activity.RESULT_OK -> {
+                    RESULT_OK -> {
                         Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT)
                     }
                     SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
@@ -377,10 +392,10 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(object: BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 when (resultCode) {
-                    Activity.RESULT_OK -> {
+                    RESULT_OK -> {
                         Toast.makeText(context, "SMS 도착 완료", Toast.LENGTH_SHORT)
                     }
-                    Activity.RESULT_CANCELED -> {
+                    RESULT_CANCELED -> {
                         Toast.makeText(context, "SMS 도착 실패", Toast.LENGTH_SHORT)
                     }
                 }
@@ -429,7 +444,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 //알람 매니저 가져오기.
-                val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
                 val intent = Intent(this, AlarmReceiver::class.java)
                 intent.putExtra("day_of_week", week)
@@ -503,6 +518,10 @@ class MainActivity : AppCompatActivity() {
         popup.menuInflater.inflate(R.menu.alarm_menu, popup.menu)
         popup.show()
     }
+
+    /******************************************************************
+     * ******************************노래*******************************
+     * ****************************************************************/
 
     /******************************************************************
      * ******************************객체*******************************
