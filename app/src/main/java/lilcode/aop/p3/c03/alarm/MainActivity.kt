@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.ContactsContract
 import android.telephony.SmsManager
 import android.util.Log
@@ -24,7 +25,9 @@ import androidx.core.app.ActivityCompat
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 import lilcode.aop.p3.c03.alarm.databinding.ActivityMainBinding
+import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     val MY_PERMISSION_ACCESS_ALL = 100
@@ -243,10 +246,12 @@ class MainActivity : AppCompatActivity() {
                 
                 -개발자는 절대로 사용자의 기기에 임의로 접근하여 탈취하지 않습니다.
                 
-                -미션에 따라, 최초 알람으로부터 10분 이내에 일어나지 않을 시 벌칙 내용입니다.
+                -주어지는 미션에 따라, 최초 알람으로부터 10분 이내에 일어나지 않을 시 벌칙 내용입니다.
                 ■랜덤 전화 : 당신의 전화번호부에 있는 사람에게 랜덤으로 전화가 갑니다. 선생님, 교수님 또는 직장 상사에게 전화가 간다면 재밌겠죠?
                 ■랜덤 문자 : 당신의 전화번호부에 있는 사람에게 랜덤으로 "당신 생각이 나서 연락했어요.." 라는 내용의 문자 메시지가 전송됩니다.
                 ■내가 설정한 노래가 아니야 : j-pop이 굉장히 크게 틉니다. 혹시 옆 방에 계신 분도 들릴지도? 
+                
+                -미션은 랜덤이며, 다음에 실행할 벌칙을 앱의 하단에서 확인하실 수 있습니다.
             """.trimIndent()
             builder.setTitle("앱 설명").setMessage(text)
 
@@ -558,5 +563,9 @@ class MainActivity : AppCompatActivity() {
         private const val M_ONOFF_KEY = "onOff"
         private const val M_MISSION = "mission"
         private const val M_ALARM_REQUEST_CODE = 1000
+
+        fun getMusic(): Int {
+            return R.raw.dynamite
+        }
     }
 }

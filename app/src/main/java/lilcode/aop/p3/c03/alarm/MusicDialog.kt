@@ -1,14 +1,17 @@
 package lilcode.aop.p3.c03.alarm
 
 import android.R
+import android.app.AlertDialog
 import android.app.Dialog
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import lilcode.aop.p3.c03.alarm.databinding.MusicDialogBinding
 import java.io.File
@@ -21,34 +24,29 @@ class MusicDialog(private val context: AppCompatActivity) {
 
     lateinit var mp3List: ArrayList<String>    //mp3파일을 저장할 리스트
     lateinit var selectedMp3: String //현재 선택된 mp3파일
-    var mp3Path = ""
-
-    fun setPath(mp3: String) {
-        
-    }
+    var mp3Path = { MainActivity.applicationContext(). }
 
     lateinit var mPlayer: MediaPlayer    //mp3 player 객체 생성
 
     fun show(content: String) {
-        Log.d("MP3PATH 경로 : ", mp3Path.toString())
         binding = MusicDialogBinding.inflate(context.layoutInflater)
 
         //dlg.requestWindowFeature(Window.FEATURE_NO_TITLE) // 타이블 바 제거
         dlg.setContentView(binding.root)     //다이얼로그에 사용할 xml 파일을 불러옴
-
-        /* 음악 선택시 메인으로 넘겨주기
-        biding.~.setOnClickListener {
-            listener.onOKClicked("~를 선택하셨습니다")
-
-            dlg.dismiss()
-        }
-         */
 
         mp3List = ArrayList()   //mp3파일을 저장할 리스트
 
         var listFiles = File(mp3Path).listFiles()   //해당 경로에 있는 모든 파일들을 File[] 타입 변수에 저장 (mp3말고 다른 파일이 있을 수 있음)
         var fileName: String    //파일 전체 이름
         var extName: String     //확장자 이름
+        if (listFiles.size == 0) {
+            AlertDialog.Builder(context).run {
+                setMessage("저장소에 저장된 노래가 존재하지 않습니다")
+                show()
+            }
+            return
+        }
+
         for (file in listFiles!!) {
             fileName = file.name
             extName = fileName.substring(fileName.length - 3)   //확장자 추출하기
