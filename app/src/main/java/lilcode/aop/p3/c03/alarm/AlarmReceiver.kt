@@ -42,7 +42,7 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun notifyNotification(context: Context) {
         with(NotificationManagerCompat.from(context)) {
             val build = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("알람")
+                .setContentTitle("죽음의 알람")
                 .setContentText("일어날 시간입니다.")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)

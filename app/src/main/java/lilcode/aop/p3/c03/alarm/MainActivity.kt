@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         // 시:분 형식으로 가져온 데이터 스플릿
         val alarmData = timeDBValue.split(":")
 
-        val alarmModel = AlarmDisplayModel(alarmData[0].toInt(), alarmData[1].toInt(), onOffDBValue)
+        val alarmModel = AlarmDisplayModel(alarmData[0].toInt(), alarmData[1].toInt(), alarmData[2].toInt(), onOffDBValue)
 
         // 보정 조정 예외처 (브로드 캐스트 가져오기)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -125,8 +125,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     // 알람 시간 DB에 저장
-    private fun saveAlarmModel(hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
+    private fun saveAlarmModel(day:Int, hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
         val model = AlarmDisplayModel(
+            day = day,
             hour = hour,
             minute = minute,
             onOff = onOff
@@ -153,17 +154,14 @@ class MainActivity : AppCompatActivity() {
     @Override
     public fun onClick1(v: View) {
         v.setOnClickListener {
-            // 현재 시간을 가져오기 위해 캘린더 인스터늣 사
+            // 현재 시간을 가져오기 위해 캘린더 인스턴스
             val calendar = Calendar.getInstance()
             // TimePickDialog 띄워줘서 시간을 설정을 하게끔 하고, 그 시간을 가져와서
             TimePickerDialog(this, { picker, hour, minute ->
-
-
                 // 데이터를 저장
-                val model = saveAlarmModel(hour, minute, false)
+                val model = saveAlarmModel(0, hour, minute, true)
                 // 뷰를 업데이트
                 renderView(model)
-
                 // 기존에 있던 알람을 삭제한다.
                 cancelAlarm()
 
@@ -305,12 +303,6 @@ class MainActivity : AppCompatActivity() {
 
     // onclick : 음악 선택 창
     public fun onClickMusic(v: View) {
-        when (v?.id) {
-            binding.music.id -> {
-                val dlg = MusicDialog(this)
-                dlg.show("hi")
-            }
-        }
     }
 
     /******************************************************************
@@ -421,7 +413,7 @@ class MainActivity : AppCompatActivity() {
             // 저장한 데이터를 확인한다
             val model =
                 it.tag as? AlarmDisplayModel ?: return@setOnClickListener// 형변환 실패하는 경우에는 null
-            val newModel = saveAlarmModel(model.hour, model.minute, model.onOff.not()) // on off 스위칭
+            val newModel = saveAlarmModel(model.day, model.hour, model.minute, model.onOff.not()) // on off 스위칭
             renderView(newModel)
 
             // 온/오프 에 따라 작업을 처리한다
@@ -440,8 +432,12 @@ class MainActivity : AppCompatActivity() {
 
                 // 온 -> 알람을 등록
                 val calender = Calendar.getInstance().apply {
+                    set(Calendar.DATE, newModel.day)
                     set(Calendar.HOUR_OF_DAY, newModel.hour)
                     set(Calendar.MINUTE, newModel.minute)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+
                     // 지나간 시간의 경우 다음날 알람으로 울리도록
                     if (before(Calendar.getInstance())) {
                         add(Calendar.DATE, 1) // 하루 더하기
@@ -482,7 +478,6 @@ class MainActivity : AppCompatActivity() {
     // 저장된 시간을 화면에 표시
     private fun renderView(model: AlarmDisplayModel) {
         // 최초 실행 또는 시간 재설정 시 들어옴
-
         findViewById<TextView>(R.id.ampmTextView).apply {
             text = model.ampmText
         }
@@ -563,9 +558,5 @@ class MainActivity : AppCompatActivity() {
         private const val M_ONOFF_KEY = "onOff"
         private const val M_MISSION = "mission"
         private const val M_ALARM_REQUEST_CODE = 1000
-
-        fun getMusic(): Int {
-            return R.raw.dynamite
-        }
     }
 }
