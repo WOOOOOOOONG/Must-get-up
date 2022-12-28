@@ -10,10 +10,8 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.provider.ContactsContract
 import android.telephony.SmsManager
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.PopupMenu
@@ -84,7 +82,8 @@ class MainActivity : AppCompatActivity() {
         // 시:분 형식으로 가져온 데이터 스플릿
         val alarmData = timeDBValue.split(":")
 
-        val alarmModel = AlarmDisplayModel(alarmData[0].toInt(), alarmData[1].toInt(), alarmData[2].toInt(), onOffDBValue)
+        // val alarmModel = AlarmDisplayModel(3, alarmData[0].toInt(), alarmData[1].toInt(), onOffDBValue)
+        val alarmModel = AlarmDisplayModel(alarmData[0].toInt(), alarmData[1].toInt(), onOffDBValue)
 
         // 보정 조정 예외처 (브로드 캐스트 가져오기)
         val pendingIntent = PendingIntent.getBroadcast(
@@ -125,9 +124,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     // 알람 시간 DB에 저장
-    private fun saveAlarmModel(day:Int, hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
+    private fun saveAlarmModel(hour: Int, minute: Int, onOff: Boolean): AlarmDisplayModel {
         val model = AlarmDisplayModel(
-            day = day,
+            //day = day,
             hour = hour,
             minute = minute,
             onOff = onOff
@@ -159,7 +158,7 @@ class MainActivity : AppCompatActivity() {
             // TimePickDialog 띄워줘서 시간을 설정을 하게끔 하고, 그 시간을 가져와서
             TimePickerDialog(this, { picker, hour, minute ->
                 // 데이터를 저장
-                val model = saveAlarmModel(0, hour, minute, true)
+                val model = saveAlarmModel(hour, minute, true)
                 // 뷰를 업데이트
                 renderView(model)
                 // 기존에 있던 알람을 삭제한다.
@@ -413,7 +412,8 @@ class MainActivity : AppCompatActivity() {
             // 저장한 데이터를 확인한다
             val model =
                 it.tag as? AlarmDisplayModel ?: return@setOnClickListener// 형변환 실패하는 경우에는 null
-            val newModel = saveAlarmModel(model.day, model.hour, model.minute, model.onOff.not()) // on off 스위칭
+            // val newModel = saveAlarmModel(model.day, model.hour, model.minute, model.onOff.not()) // on off 스위칭
+            val newModel = saveAlarmModel(model.hour, model.minute, model.onOff.not()) // on off 스위칭
             renderView(newModel)
 
             // 온/오프 에 따라 작업을 처리한다
@@ -432,7 +432,7 @@ class MainActivity : AppCompatActivity() {
 
                 // 온 -> 알람을 등록
                 val calender = Calendar.getInstance().apply {
-                    set(Calendar.DATE, newModel.day)
+                    // set(Calendar.DATE, newModel.day)
                     set(Calendar.HOUR_OF_DAY, newModel.hour)
                     set(Calendar.MINUTE, newModel.minute)
                     set(Calendar.SECOND, 0)
