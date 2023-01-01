@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="skip" translatable="false">Skip</string>
+    <string name="notification_alarm_is_about_to_go_off" translatable="false">알람을 1회 스킵합니다.</string>
+    <string name="skip_duration_title" translatable="false">다시 알림</string>
+    <string-array name="skip_duration_entries">
+        <item>Off</item>
+        <item>15분</item>
+        <item>30분</item>
+        <item>1분</item>
+        <item>2분</item>
+        <item>3분</item>
+    </string-array>
+    <string-array name="skip_duration_values">
+        <item>-1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+        <item>180</item>
+    </string-array>
+</resources>

@@ -1,61 +1,38 @@
-# aop-part3-chapter03 -  알람앱
+[![Installs](https://img.shields.io/endpoint?color=green&logo=google-play&logoColor=green&url=https%3A%2F%2Fplayshields.herokuapp.com%2Fplay%3Fi%3Dcom.better.alarm%26l%3DPlay%2520Store%2520Installs%26m%3D%24installs)](https://play.google.com/store/apps/details?id=com.better.alarm)
+[![Rating](https://img.shields.io/endpoint?color=green&logo=google-play&logoColor=green&url=https%3A%2F%2Fplayshields.herokuapp.com%2Fplay%3Fi%3Dcom.better.alarm%26l%3DPlay%2520Store%2520Rating%26m%3D%24rating)](https://play.google.com/store/apps/details?id=com.better.alarm)
+[![Version](https://img.shields.io/endpoint?color=green&logo=google-play&logoColor=green&url=https%3A%2F%2Fplayshields.herokuapp.com%2Fplay%3Fi%3Dcom.better.alarm%26l%3DPlay%2520Store%2520Version%26m%3D%24version)](https://play.google.com/store/apps/details?id=com.better.alarm)
 
-보다 자세한 내용을 저의 [블로그 게시글](https://whyprogrammer.tistory.com/588) 통해 확인할 수 있습니다.
+[![Build Status](https://github.com/yuriykulikov/AlarmClock/actions/workflows/gradle.yml/badge.svg?branch=develop)](https://github.com/yuriykulikov/AlarmClock/actions)
+[![codecov](https://codecov.io/gh/yuriykulikov/AlarmClock/branch/develop/graph/badge.svg)](https://codecov.io/gh/yuriykulikov/AlarmClock)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f5af63df137746bcb45e43b4f2a78217)](https://app.codacy.com/gh/yuriykulikov/AlarmClock)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# 목차
+# Simple alarm clock
+Simple Alarm Clock is an alarm clock for Android smartphones and tablets that brings pure alarm experience to you by combining powerful features and clean interface.
+The interface of our Alarm clock is designed to be simple, intuitive and efficient. By removing what is not essential, we make access to everything you need even easier.
 
-1. 인트로 (완성앱 & 구현 기능 소개)
-2. 레이아웃 작성하기
-3. 알람 설정 화면 구현하기
-4. AlarmManager 을 사용하여 알람 등록하기
-5. AlarmReceiver 구현하기
-6. 아웃트로
+# Features
+* Low volume gentle alarm which starts some time before the main alarm (when you are in good sleep phase to wake up, you will hear the low volume alarm and wake up most refreshed. 30 minutes is most of the time enough to catch the fast sleep phase)
+* Cool time picker like in Jelly Bean. No more spinning, only phone-style keyboard!
+* Volume fade in and vibration starting only after completed fade in
+* Snooze for some time with one click or to a snooze to selected time with out time picker
+* Longclick to dismiss - prevents accidental alarm dismiss
+* Longclick on snooze button for adjustable snooze time with a convenient time picker
 
+# Open source
+The application code is branched from AOSP and is open source. Additional feature requests are appreciated! You can submit bugreports and feature requests by sending an email to developers!
 
+# License
+Apache 2.0
 
-# 결과화면
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+     alt="Get it on Google Play"
+     height="100">](https://play.google.com/store/apps/details?id=com.better.alarm)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="100">](https://f-droid.org/packages/com.better.alarm/)
 
-![1](https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FczGroG%2Fbtq6PC58AzI%2FbT9YLZRkiYIBgzxRia2zK1%2Fimg.jpg)
-![2](https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FourkL%2Fbtq6HjAtu09%2F2rPJK1UaorA4KBODDeS39k%2Fimg.jpg)
+[![Installs](https://img.shields.io/endpoint?color=green&logo=google-play&logoColor=green&url=https%3A%2F%2Fplayshields.herokuapp.com%2Fplay%3Fi%3Dcom.better.alarm%26l%3DPlay%2520Store%2520Installs%26m%3D%24installs)](https://play.google.com/store/apps/details?id=com.better.alarm&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1)
 
-
-# 이 챕터를 통해 배우는 것
-
-
-
-- **AlarmManager** 사용하기
-- **Notification** 사용하기 (파트3, 챕터1 복습)
-- **Broadcast receiver** 사용하기
-
-
-
-### **Background 작업**
-
-- Immediate tasks (즉시 실행해야하는 작업)
-    - Thread (db 저장, ui 스레드 외 작업 등)
-    - Handler
-    - Kotlin coroutines (코틀린 비동기 프로그래밍 방식)
-- Deferred tasks (지연된 작업)
-    - WorkManager (앱이 종료되거나 다시 시작됬을 때 실행)
-- Exact tasks (정시에 실행해야 하는 작업)
-    - AlarmManager
-
-
-
-### AlarmManager
-
-- Real Time (실제 시간) 으로 실행시키는 방법
-- Elapsed Time (기기가 부팅된지부터 얼마나 지났는지) 으로 실행시키는 방법
-
-
-
-### 알람앱
-
-지정된 시간에 알람이 울리게 할 수 있음.
-
-지정된 시간 이후에는 매일 같은 시간에 반복되게 알람이 울리게 할 수 있음.
-
-
-
-
-
+# Code coverage
+[![Codecov](https://codecov.io/gh/yuriykulikov/AlarmClock/branch/develop/graphs/tree.svg)](https://codecov.io/github/yuriykulikov/AlarmClock?branch=develop)

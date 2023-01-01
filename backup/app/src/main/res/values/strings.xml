@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Alarm</string>
+    <string name="change_time">시간 재설정</string>
+    <string name="on_alarm">알람 켜기</string>
+    <string name="music">알람 음악</string>
+    <string name="intro">설명</string>
+    <string name="togglebutton">ToggleButton</string>
+    <string name="mon">월</string>
+    <string name="mission">현재 미션 :</string>
+</resources>
