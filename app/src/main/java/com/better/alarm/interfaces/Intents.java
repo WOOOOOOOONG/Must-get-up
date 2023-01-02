@@ -32,6 +32,11 @@ public interface Intents {
   public static final String ACTION_CANCEL_SNOOZE =
       BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_SNOOZE";
 
+  public static final String ALARM_PENALTY_ACTION = BuildConfig.APPLICATION_ID + ".ALARM_PENALTY";
+
+  public static final String ACTION_CANCEL_PENALTY =
+          BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_PENALTY";
+
   /** Broadcasted when alarm is dismissed. */
   public static final String ALARM_DISMISS_ACTION = BuildConfig.APPLICATION_ID + ".ALARM_DISMISS";
 

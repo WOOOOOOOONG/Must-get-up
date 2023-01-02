@@ -71,13 +71,6 @@
             </com.better.alarm.view.DigitalClock>
 
             <TextView
-                android:id="@+id/alert_text_penalty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="벌칙 시간까지 :" />
-
-            <TextView
                 android:id="@+id/alert_text_snooze"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="match_parent"

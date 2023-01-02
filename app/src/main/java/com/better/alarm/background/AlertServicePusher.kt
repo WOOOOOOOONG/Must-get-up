@@ -27,6 +27,8 @@ class AlertServicePusher(store: Store, context: Context, wm: WakeLockManager, lo
             is Event.SnoozedEvent -> null
             is Event.Autosilenced -> null
             is Event.CancelSnoozedEvent -> null
+            is Event.PenaltyEvent -> null
+            is Event.CancelPenaltyEvent -> null
             is Event.ShowSkip -> null
             is Event.HideSkip -> null
             is Event.NullEvent -> throw RuntimeException("NullEvent")

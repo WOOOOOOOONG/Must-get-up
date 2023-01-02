@@ -1,12 +1,23 @@
 package com.better.alarm.background
 
+import android.annotation.SuppressLint
 import android.app.Notification
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.provider.ContactsContract
+import android.telephony.SmsManager
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.better.alarm.BuildConfig
 import com.better.alarm.interfaces.IAlarmsManager
 import com.better.alarm.interfaces.Intents
 import com.better.alarm.isOreo
 import com.better.alarm.logger.Logger
 import com.better.alarm.model.Alarmtone
+import com.better.alarm.presenter.AlarmDetailsFragment
 import com.better.alarm.util.modify
 import com.better.alarm.util.requireValue
 import com.better.alarm.util.subscribeIn
@@ -16,6 +27,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 interface AlertPlugin {
@@ -54,6 +66,13 @@ sealed class Event {
       Event()
   data class MuteEvent(val actions: String = Intents.ACTION_MUTE) : Event()
   data class DemuteEvent(val actions: String = Intents.ACTION_DEMUTE) : Event()
+  data class PenaltyEvent(
+      val id: Int,
+      val calendar: Calendar,
+      val actions: String = Intents.ALARM_PENALTY_ACTION
+  ) : Event()
+  data class CancelPenaltyEvent(val id: Int, val actions: String = Intents.ACTION_CANCEL_PENALTY) :
+      Event()
 }
 
 interface EnclosingService {
@@ -127,6 +146,7 @@ class AlertService(
         is Event.DismissEvent -> remove(event.id)
         is Event.SnoozedEvent -> remove(event.id)
         is Event.Autosilenced -> remove(event.id)
+        is Event.PenaltyEvent -> remove(event.id)
       }
 
       activeAlarms.requireValue().isNotEmpty()

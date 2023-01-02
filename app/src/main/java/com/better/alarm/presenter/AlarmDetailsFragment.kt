@@ -299,78 +299,11 @@ class AlarmDetailsFragment : Fragment() {
           val isPenalty = fragmentView.findViewById<CheckBox>(R.id.details_penalty_checkbox)
 
           if (isPenalty.isChecked) {
-              modify("Penalty-time") { value -> value.copy(penaltyTime = 10, isEnabled = true) }
+              modify("Penalty-Onoff") { value -> value.copy(isPenalty = true, isEnabled = true) }
           } else {
-              modify("Penalty-time") { value -> value.copy(penaltyTime = -1, isEnabled = false) }
+              modify("Penalty-Onoff") { value -> value.copy(isPenalty = false, isEnabled = false) }
           }
       }
-  }
-
-  // 미션을 위한 전화번호 얻기 함수
-  @SuppressLint("Range")
-  private fun getPhoneNumber(): String? {
-      val names: MutableList<Contact> = arrayListOf()
-      val cr = context?.contentResolver
-      val cur = cr?.query(
-          ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
-          null, null, null)
-      if (cur!!.count > 0) {
-          while (cur.moveToNext()) {
-              val id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NAME_RAW_CONTACT_ID))
-              val name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
-              val number = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
-              names.add(Contact(id , name , number))
-          }
-      }
-
-      val range = (0..names.size-1)
-
-      return names.get(range.random()).number
-  }
-
-  // 미션: 메시지 보내기
-  fun submitMessageMission() {
-      val telNumber = getPhoneNumber()
-      val intentSent: Intent = Intent("SMS_SENT_ACTION")
-      val intentDelivery: Intent = Intent("SMS_DELIVERED_ACTION")
-      val sentIntent = PendingIntent.getBroadcast(context, 0, intentSent, 0)
-      val deliveredIntent = PendingIntent.getBroadcast(context, 0, intentDelivery, 0)
-
-      context?.registerReceiver(object: BroadcastReceiver() {
-          override fun onReceive(context: Context?, intent: Intent?) {
-              when (resultCode) {
-                  AppCompatActivity.RESULT_OK -> {
-                      Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT)
-                  }
-                  SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
-                      Toast.makeText(context, "전송 실패", Toast.LENGTH_SHORT)
-                  }
-                  SmsManager.RESULT_ERROR_NO_SERVICE -> {
-                      Toast.makeText(context, "서비스 지역이 아닙니다", Toast.LENGTH_SHORT)
-                  }
-                  SmsManager.RESULT_ERROR_RADIO_OFF -> {
-                      Toast.makeText(context, "휴대폰이 꺼져있습니다", Toast.LENGTH_SHORT)
-                  }
-                  SmsManager.RESULT_ERROR_NULL_PDU -> {
-                      Toast.makeText(context, "PDU Null", Toast.LENGTH_SHORT)
-                  }
-              }
-          } }, IntentFilter("SMS_SENT_ACTION"))
-      // SMS가 도착했을 때 실행
-      context?.registerReceiver(object: BroadcastReceiver() {
-          override fun onReceive(context: Context?, intent: Intent?) {
-              when (resultCode) {
-                  AppCompatActivity.RESULT_OK -> {
-                      Toast.makeText(context, "SMS 도착 완료", Toast.LENGTH_SHORT)
-                  }
-                  AppCompatActivity.RESULT_CANCELED -> {
-                      Toast.makeText(context, "SMS 도착 실패", Toast.LENGTH_SHORT)
-                  }
-              }
-          }
-      }, IntentFilter("SMS_DELIVERED_ACTION"))
-      val SmsManager = SmsManager.getDefault()
-      SmsManager.sendTextMessage(getPhoneNumber(), null, "당신 생각이 나서 연락했어요..", sentIntent, deliveredIntent)
   }
 
   private fun onCreateTopRowView() =

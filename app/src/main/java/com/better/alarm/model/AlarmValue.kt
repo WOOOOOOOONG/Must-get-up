@@ -22,7 +22,7 @@ data class AlarmValue(
     val isEnabled: Boolean = false,
     val hour: Int = 0,
     val minutes: Int = 0,
-    val penaltyTime: Int = -1,
+    val isPenalty: Boolean = false,
     val isPrealarm: Boolean = false,
     val alarmtone: Alarmtone = Alarmtone.Default,
     val isVibrate: Boolean = true,
@@ -47,7 +47,7 @@ data class AlarmValue(
           isEnabled = data.isEnabled,
           hour = data.hour,
           minutes = data.minutes,
-          penaltyTime = data.penaltyTime,
+          isPenalty = data.isPenalty,
           isPrealarm = data.isPrealarm,
           alarmtone = data.alarmtone,
           isVibrate = data.isVibrate,
@@ -58,7 +58,6 @@ data class AlarmValue(
 
   fun withHour(hour: Int) = copy(hour = hour)
   fun withDaysOfWeek(daysOfWeek: DaysOfWeek) = copy(daysOfWeek = daysOfWeek)
-  fun withPenalty(penaltyTime: Int) = copy(penaltyTime = penaltyTime)
   fun withIsPrealarm(isPrealarm: Boolean) = copy(isPrealarm = isPrealarm)
 }
 

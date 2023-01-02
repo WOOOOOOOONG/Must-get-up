@@ -219,6 +219,7 @@ class AlertServiceWrapper : Service() {
             Intents.ACTION_MUTE,
             Intents.ACTION_DEMUTE -> START_STICKY
             Intents.ALARM_SNOOZE_ACTION,
+            Intents.ALARM_PENALTY_ACTION,
             Intents.ALARM_DISMISS_ACTION,
             Intents.ACTION_SOUND_EXPIRED -> START_NOT_STICKY
             else -> throw RuntimeException("Unknown action ${intent.action}")

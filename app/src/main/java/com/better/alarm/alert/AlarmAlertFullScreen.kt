@@ -136,23 +136,8 @@ class AlarmAlertFullScreen : FragmentActivity() {
     findViewById<TextView>(R.id.alarm_alert_label).text = titleText
   }
 
-  fun getTime(): String {
-      var now = System.currentTimeMillis()
-      var date = Date(now)
-
-      var dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-      var getTime = dateFormat.format(date)
-
-      return getTime
-  }
-
   private fun updateLayout() {
     setContentView(R.layout.alert_fullscreen)
-
-    val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(getTime())
-    val alarmTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(alarmValue.nextTime.time.toString())
-    Log.d("지금시간 vs 알람시간", " $nowTime, $alarmTime")
-    findViewById<TextView>(R.id.alert_text_penalty).setText("벌칙 시간까지 : ${alarmValue.penaltyTime}분")
 
     findViewById<Button>(R.id.alert_button_snooze).run {
       requestFocus()

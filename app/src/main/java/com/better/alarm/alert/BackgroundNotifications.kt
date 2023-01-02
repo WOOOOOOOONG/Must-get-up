@@ -18,12 +18,20 @@
 
 package com.better.alarm.alert
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.provider.ContactsContract
+import android.telephony.SmsManager
 import android.text.format.DateFormat
+import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.better.alarm.CHANNEL_ID
 import com.better.alarm.R
 import com.better.alarm.background.Event
@@ -34,9 +42,12 @@ import com.better.alarm.interfaces.Intents
 import com.better.alarm.interfaces.PresentationToModelIntents
 import com.better.alarm.notificationBuilder
 import com.better.alarm.pendingIntentUpdateCurrentFlag
+import com.better.alarm.presenter.AlarmDetailsFragment
 import com.better.alarm.presenter.TransparentActivity
+import com.better.alarm.util.formatToast
 import com.better.alarm.util.subscribeForever
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Glue class: connects AlarmAlert IntentReceiver to AlarmAlert activity. Passes through Alarm ID.
@@ -56,6 +67,8 @@ class BackgroundNotifications(
         is Event.DismissEvent -> nm.cancel(event.id + SNOOZE_NOTIFICATION)
         is Event.CancelSnoozedEvent -> nm.cancel(event.id + SNOOZE_NOTIFICATION)
         is Event.SnoozedEvent -> onSnoozed(event.id, event.calendar)
+        is Event.CancelPenaltyEvent -> nm.cancel(event.id + SNOOZE_NOTIFICATION)
+        is Event.PenaltyEvent -> submitMessageMission()
         is Event.Autosilenced -> onSoundExpired(event.id)
         is Event.ShowSkip -> onShowSkip(event.id)
         is Event.HideSkip -> nm.cancel(SKIP_NOTIFICATION + event.id)
@@ -69,6 +82,11 @@ class BackgroundNotifications(
   private fun onSnoozed(id: Int, calendar: Calendar) {
     // When button Reschedule is clicked, the TransparentActivity with
     // TimePickerFragment to set new alarm time is launched
+      val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(System.currentTimeMillis()))
+      val penaltyTime = SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Calendar.getInstance().add(Calendar.))
+      Log.d("지금시간", " $nowTime")
+      Log.d("알람시간", " $penaltyTime")
+
     val pendingReschedule =
         Intent()
             .apply {
@@ -172,6 +190,87 @@ class BackgroundNotifications(
       nm.notify(SKIP_NOTIFICATION + id, notification)
     }
   }
+
+  // 미션 실행을 위한 함수
+  private fun submitMessageMission() {
+      val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(getTime())
+      val alarmTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Calendar.getInstance().formatTimeString())
+
+      Log.d("지금시간 vs 알람시간", " $nowTime, $alarmTime")
+      // val telNumber = getPhoneNumber()
+      val intentSent: Intent = Intent("SMS_SENT_ACTION")
+      val intentDelivery: Intent = Intent("SMS_DELIVERED_ACTION")
+      val sentIntent = PendingIntent.getBroadcast(mContext, 0, intentSent, 0)
+      val deliveredIntent = PendingIntent.getBroadcast(mContext, 0, intentDelivery, 0)
+
+      mContext?.registerReceiver(object: BroadcastReceiver() {
+          override fun onReceive(context: Context?, intent: Intent?) {
+              when (resultCode) {
+                  AppCompatActivity.RESULT_OK -> {
+                      Toast.makeText(context, "전송 완료", Toast.LENGTH_SHORT)
+                  }
+                  SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
+                      Toast.makeText(context, "전송 실패", Toast.LENGTH_SHORT)
+                  }
+                  SmsManager.RESULT_ERROR_NO_SERVICE -> {
+                      Toast.makeText(context, "서비스 지역이 아닙니다", Toast.LENGTH_SHORT)
+                  }
+                  SmsManager.RESULT_ERROR_RADIO_OFF -> {
+                      Toast.makeText(context, "휴대폰이 꺼져있습니다", Toast.LENGTH_SHORT)
+                  }
+                  SmsManager.RESULT_ERROR_NULL_PDU -> {
+                      Toast.makeText(context, "PDU Null", Toast.LENGTH_SHORT)
+                  }
+              }
+          } }, IntentFilter("SMS_SENT_ACTION"))
+
+      // SMS가 도착했을 때 실행
+      mContext?.registerReceiver(object: BroadcastReceiver() {
+          override fun onReceive(context: Context?, intent: Intent?) {
+              when (resultCode) {
+                  AppCompatActivity.RESULT_OK -> {
+                      Toast.makeText(context, "SMS 도착 완료", Toast.LENGTH_SHORT)
+                  }
+                  AppCompatActivity.RESULT_CANCELED -> {
+                      Toast.makeText(context, "SMS 도착 실패", Toast.LENGTH_SHORT)
+                  }
+              }
+          }
+      }, IntentFilter("SMS_DELIVERED_ACTION"))
+      val SmsManager = SmsManager.getDefault()
+      SmsManager.sendTextMessage(getPhoneNumber(), null, "당신 생각이 나서 연락했어요..", sentIntent, deliveredIntent)
+  }
+
+  fun getTime(): String {
+      var now = System.currentTimeMillis()
+      var date = Date(now)
+
+      var dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      var getTime = dateFormat.format(date)
+
+      return getTime
+  }
+
+  @SuppressLint("Range")
+  private fun getPhoneNumber(): String? {
+        val names: MutableList<AlarmDetailsFragment.Contact> = arrayListOf()
+        val cr = mContext.contentResolver
+        val cur = cr?.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+            null, null, null)
+        if (cur!!.count > 0) {
+            while (cur.moveToNext()) {
+                val id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NAME_RAW_CONTACT_ID))
+                val name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val number = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                names.add(AlarmDetailsFragment.Contact(id, name, number))
+            }
+        }
+
+        val range = (0..names.size-1)
+
+        return names.get(range.random()).number
+    }
 
   companion object {
     private const val DM12 = "E h:mm aa"
