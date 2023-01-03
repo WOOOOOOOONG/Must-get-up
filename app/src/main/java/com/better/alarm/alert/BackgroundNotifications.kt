@@ -57,7 +57,7 @@ class BackgroundNotifications(
     private val nm: NotificationManager,
     private val alarmsManager: IAlarmsManager,
     private val prefs: Prefs,
-    private val store: Store
+    private val store: Store,
 ) {
   init {
     store.events.subscribeForever { event ->
@@ -68,7 +68,7 @@ class BackgroundNotifications(
         is Event.CancelSnoozedEvent -> nm.cancel(event.id + SNOOZE_NOTIFICATION)
         is Event.SnoozedEvent -> onSnoozed(event.id, event.calendar)
         is Event.CancelPenaltyEvent -> nm.cancel(event.id + SNOOZE_NOTIFICATION)
-        is Event.PenaltyEvent -> submitMessageMission()
+        is Event.PenaltyEvent -> submitMessageMission(event.id, event.calendar)
         is Event.Autosilenced -> onSoundExpired(event.id)
         is Event.ShowSkip -> onShowSkip(event.id)
         is Event.HideSkip -> nm.cancel(SKIP_NOTIFICATION + event.id)
@@ -82,11 +82,6 @@ class BackgroundNotifications(
   private fun onSnoozed(id: Int, calendar: Calendar) {
     // When button Reschedule is clicked, the TransparentActivity with
     // TimePickerFragment to set new alarm time is launched
-      val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(System.currentTimeMillis()))
-      val penaltyTime = SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(Calendar.getInstance().add(Calendar.))
-      Log.d("지금시간", " $nowTime")
-      Log.d("알람시간", " $penaltyTime")
-
     val pendingReschedule =
         Intent()
             .apply {
@@ -192,11 +187,14 @@ class BackgroundNotifications(
   }
 
   // 미션 실행을 위한 함수
-  private fun submitMessageMission() {
-      val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(getTime())
-      val alarmTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Calendar.getInstance().formatTimeString())
+  private fun submitMessageMission(id: Int, calendar: Calendar) {
+      val nowTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(System.currentTimeMillis()))
+      val prevTime = SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(calendar.time)
+      val penaltyTime = SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(calendar.add(Calendar.MINUTE, 10))
+      val nextTime = SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(calendar.time)
+      Log.d("지금시간", " $nowTime")
+      Log.d("알람시간", " $penaltyTime")
 
-      Log.d("지금시간 vs 알람시간", " $nowTime, $alarmTime")
       // val telNumber = getPhoneNumber()
       val intentSent: Intent = Intent("SMS_SENT_ACTION")
       val intentDelivery: Intent = Intent("SMS_DELIVERED_ACTION")

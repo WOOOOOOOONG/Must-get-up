@@ -38,6 +38,8 @@ sealed class Event {
 
 data class Snooze(val hour: Int?, val minute: Int?) : Event()
 
+data class Penalty(val hour: Int?, val minute: Int?) : Event()
+
 data class Change(val value: AlarmValue) : Event()
 
 object PrealarmDurationChanged : Event()
@@ -130,6 +132,7 @@ class AlarmCore(
 
   private val preAlarmDuration: Observable<Int>
   private val snoozeDuration: Observable<Int>
+  private val penaltyDuration: Observable<Int>
   private val autoSilence: Observable<Int>
 
   private val disposable = CompositeDisposable()
@@ -139,6 +142,7 @@ class AlarmCore(
 
     this.preAlarmDuration = prefs.preAlarmDuration.observe()
     this.snoozeDuration = prefs.snoozeDuration.observe()
+    this.penaltyDuration = prefs.penaltyDuration.observe()
     this.autoSilence = prefs.autoSilence.observe()
 
     stateMachine = StateMachine("Alarm " + container.id, log)
@@ -164,8 +168,10 @@ class AlarmCore(
   private val preAlarmSet = set.PreAlarmSetState()
   private val skipping = enabledState.SkippingSetState()
   private val snoozed = enabledState.SnoozedState()
+  private val penaltyed = enabledState.PenaltyedState()
   private val preAlarmFired = enabledState.PreAlarmFiredState()
   private val preAlarmSnoozed = enabledState.PreAlarmSnoozedState()
+  private val preAlarmPenaltyed = enabledState.PreAlarmPenaltyedState()
   private val fired = enabledState.FiredState()
   private val deletedState = DeletedState()
 
@@ -252,6 +258,10 @@ class AlarmCore(
 
     override fun onSnooze(snooze: Snooze) {
       log.warning { "$this is in DisabledState" }
+    }
+
+    override fun onPenalty(penalty: Penalty) {
+        log.warning { "$this is in DisabledState" }
     }
 
     override fun onDismiss() {
@@ -348,6 +358,7 @@ class AlarmCore(
           when (reason) {
             is Dismiss,
             is Snooze,
+            is Penalty,
             is Change,
             is Enable -> {
               broadcastAlarmSetWithNormalTime(calculateNextTime().timeInMillis)
@@ -376,6 +387,7 @@ class AlarmCore(
           when (reason) {
             is Dismiss,
             is Snooze,
+            is Penalty,
             is Change,
             is Enable -> {
               broadcastAlarmSetWithNormalTime(calculateNextPrealarmTime().timeInMillis)
@@ -525,6 +537,10 @@ class AlarmCore(
         stateMachine.transitionTo(snoozed)
       }
 
+      override fun onPenalty(penalty: Penalty) {
+          stateMachine.transitionTo(penaltyed)
+      }
+
       override fun exit(reason: Event?) {
         broadcastAlarmState(Intents.ALARM_DISMISS_ACTION)
         removeAlarm()
@@ -550,6 +566,15 @@ class AlarmCore(
         }
       }
 
+      override fun onPenalty(penalty: Penalty) {
+          if (penalty.minute != null) {
+              // penalty to time with prealarm -> go to penaltyed
+              stateMachine.transitionTo(penaltyed)
+          } else {
+              stateMachine.transitionTo(preAlarmPenaltyed)
+          }
+      }
+
       override fun exit(reason: Event?) {
         removeAlarm()
         if (reason !is Fired) {
@@ -560,63 +585,128 @@ class AlarmCore(
     }
 
     inner class SnoozedState : AlarmState() {
-      internal var nextTime: Calendar? = null
+          internal var nextTime: Calendar? = null
 
-      private fun nextRegualarSnoozeCalendar(): Calendar {
-        val nextTime = calendars.now()
-        val snoozeMinutes = snoozeDuration.blockingFirst()
-        nextTime.add(Calendar.MINUTE, snoozeMinutes)
-        return nextTime
-      }
+          private fun nextRegualarSnoozeCalendar(): Calendar {
+              val nextTime = calendars.now()
+              val snoozeMinutes = snoozeDuration.blockingFirst()
+              nextTime.add(Calendar.MINUTE, snoozeMinutes)
+              return nextTime
+          }
 
-      override fun onEnter(reason: Event) {
-        val now = calendars.now()
-        nextTime =
-            when {
-              reason is Snooze && reason.hour != null && reason.minute != null -> {
-                log.debug { "Enter snooze $reason" }
-                val customTime =
-                    calendars.now().apply {
-                      set(Calendar.HOUR_OF_DAY, reason.hour)
-                      set(Calendar.MINUTE, reason.minute)
-                    }
-                when {
-                  customTime.after(now) -> customTime
-                  else -> nextRegualarSnoozeCalendar()
-                }
+          override fun onEnter(reason: Event) {
+              val now = calendars.now()
+              nextTime =
+                  when {
+                      reason is Snooze && reason.hour != null && reason.minute != null -> {
+                          log.debug { "Enter snooze $reason" }
+                          val customTime =
+                              calendars.now().apply {
+                                  set(Calendar.HOUR_OF_DAY, reason.hour)
+                                  set(Calendar.MINUTE, reason.minute)
+                              }
+                          when {
+                              customTime.after(now) -> customTime
+                              else -> nextRegualarSnoozeCalendar()
+                          }
+                      }
+                      else -> nextRegualarSnoozeCalendar()
+                  }
+              // change the next time to show notification properly
+              alarmStore.modify { withNextTime(nextTime) }
+              // updateListInStore()
+              broadcastAlarmState(Intents.ALARM_SNOOZE_ACTION, nextTime) // Yar. 18.08
+          }
+
+          override fun onResume() {
+              // alarm was started again while snoozed alarm was hanging in there
+              if (nextTime == null) {
+                  nextTime = nextRegualarSnoozeCalendar()
               }
-              else -> nextRegualarSnoozeCalendar()
-            }
-        // change the next time to show notification properly
-        alarmStore.modify { withNextTime(nextTime) }
-        // updateListInStore()
-        broadcastAlarmState(Intents.ALARM_SNOOZE_ACTION, nextTime) // Yar. 18.08
+
+              setAlarm(nextTime!!, CalendarType.NORMAL)
+          }
+
+          override fun onFired() {
+              stateMachine.transitionTo(fired)
+          }
+
+          override fun onSnooze(snooze: Snooze) {
+              // reschedule from notification
+              enter(snooze)
+              onResume()
+          }
+
+          override fun exit(reason: Event?) {
+              removeAlarm()
+              broadcastAlarmState(Intents.ACTION_CANCEL_SNOOZE)
+          }
       }
 
-      override fun onResume() {
-        // alarm was started again while snoozed alarm was hanging in there
-        if (nextTime == null) {
-          nextTime = nextRegualarSnoozeCalendar()
-        }
+    inner class PenaltyedState : AlarmState() {
+          internal var nextTime: Calendar? = null
 
-        setAlarm(nextTime!!, CalendarType.NORMAL)
-      }
+          private fun nextRegualarPenaltyCalendar(): Calendar {
+              val nextTime = calendars.now()
+              val penaltyMinutes = penaltyDuration.blockingFirst()
+              nextTime.add(Calendar.MINUTE, penaltyMinutes)
+              return nextTime
+          }
 
-      override fun onFired() {
-        stateMachine.transitionTo(fired)
-      }
+          override fun onEnter(reason: Event) {
+              val now = calendars.now()
+              nextTime =
+                  when {
+                      reason is Penalty && reason.hour != null && reason.minute != null -> {
+                          log.debug { "Enter penalty $reason" }
+                          val customTime =
+                              calendars.now().apply {
+                                  set(Calendar.HOUR_OF_DAY, reason.hour)
+                                  set(Calendar.MINUTE, reason.minute)
+                              }
+                          when {
+                              customTime.after(now) -> customTime
+                              else -> nextRegualarPenaltyCalendar()
+                          }
+                      }
+                      else -> nextRegualarPenaltyCalendar()
+                  }
+              // change the next time to show notification properly
+              alarmStore.modify { withNextTime(nextTime) }
+              // updateListInStore()
+              broadcastAlarmState(Intents.ALARM_PENALTY_ACTION, nextTime) // Yar. 18.08
+          }
 
-      override fun onSnooze(snooze: Snooze) {
-        // reschedule from notification
-        enter(snooze)
-        onResume()
-      }
+          override fun onResume() {
+              // alarm was started again while penaltyed alarm was hanging in there
+              if (nextTime == null) {
+                  nextTime = nextRegualarPenaltyCalendar()
+              }
 
-      override fun exit(reason: Event?) {
-        removeAlarm()
-        broadcastAlarmState(Intents.ACTION_CANCEL_SNOOZE)
+              setAlarm(nextTime!!, CalendarType.NORMAL)
+          }
+
+          override fun onFired() {
+              stateMachine.transitionTo(fired)
+          }
+
+          override fun onSnooze(snooze: Snooze) {
+              // reschedule from notification
+              enter(snooze)
+              onResume()
+          }
+
+          override fun onPenalty(penalty: Penalty) {
+              // reschedule from notification
+              enter(penalty)
+              onResume()
+          }
+
+          override fun exit(reason: Event?) {
+              removeAlarm()
+              broadcastAlarmState(Intents.ACTION_CANCEL_SNOOZE)
+          }
       }
-    }
 
     inner class PreAlarmSnoozedState : AlarmState() {
       override fun onEnter(reason: Event) {
@@ -633,6 +723,11 @@ class AlarmCore(
         stateMachine.transitionTo(snoozed)
       }
 
+      override fun onPenalty(penalty: Penalty) {
+          // reschedule from notification
+          stateMachine.transitionTo(penaltyed)
+      }
+
       override fun exit(reason: Event?) {
         removeAlarm()
         broadcastAlarmState(Intents.ACTION_CANCEL_SNOOZE)
@@ -641,6 +736,36 @@ class AlarmCore(
       override fun onResume() {
         setAlarm(calculateNextTime(), CalendarType.NORMAL)
       }
+    }
+
+    inner class PreAlarmPenaltyedState : AlarmState() {
+        override fun onEnter(reason: Event) {
+            // Yar 18.08: setAlarm -> resume; setAlarm(calculateNextTime(), CalendarType.NORMAL);
+            broadcastAlarmState(Intents.ALARM_PENALTY_ACTION, calculateNextTime())
+        }
+
+        override fun onFired() {
+            stateMachine.transitionTo(fired)
+        }
+
+        override fun onSnooze(snooze: Snooze) {
+            // reschedule from notification
+            stateMachine.transitionTo(snoozed)
+        }
+
+        override fun onPenalty(penalty: Penalty) {
+            // reschedule from notification
+            stateMachine.transitionTo(penaltyed)
+        }
+
+        override fun exit(reason: Event?) {
+            removeAlarm()
+            broadcastAlarmState(Intents.ACTION_CANCEL_PENALTY)
+        }
+
+        override fun onResume() {
+            setAlarm(calculateNextTime(), CalendarType.NORMAL)
+        }
     }
   }
 
@@ -734,6 +859,7 @@ class AlarmCore(
         is Enable -> onEnable()
         is Disable -> onDisable()
         is Snooze -> onSnooze(event)
+        is Penalty -> onPenalty(event)
         is Dismiss -> onDismiss()
         is Change -> onChange(event.value)
         is Fired -> onFired()
@@ -754,6 +880,7 @@ class AlarmCore(
     protected open fun onEnable() = markNotHandled()
     protected open fun onDisable() = markNotHandled()
     protected open fun onSnooze(snooze: Snooze) = markNotHandled()
+    protected open fun onPenalty(penalty: Penalty) = markNotHandled()
     protected open fun onDismiss() = markNotHandled()
     protected open fun onChange(alarmValue: AlarmValue) = markNotHandled()
     protected open fun onFired() = markNotHandled()
@@ -812,6 +939,14 @@ class AlarmCore(
 
   override fun snooze(hourOfDay: Int, minute: Int) {
     stateMachine.sendEvent(Snooze(hourOfDay, minute))
+  }
+
+  override fun penalty() {
+      stateMachine.sendEvent(Penalty(null, null))
+  }
+
+  override fun penalty(hourOfDay: Int, minute: Int) {
+      stateMachine.sendEvent(Penalty(hourOfDay, minute))
   }
 
   override fun dismiss() {

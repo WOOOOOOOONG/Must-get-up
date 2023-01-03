@@ -96,6 +96,7 @@
             <intent-filter>
                 <action android:name="${applicationId}.ACTION_FIRED" />
                 <action android:name="${applicationId}.ACTION_SNOOZED_FIRED" />
+                <action android:name="${applicationId}.ACTION_PENALTYED_FIRED" />
                 <action android:name="${applicationId}.ACTION_SOUND_EXPIRED" />
                 <action android:name="${applicationId}.ACTION_CANCEL_NOTIFICATION" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

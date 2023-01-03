@@ -24,9 +24,10 @@ class AlarmStateNotifier(private val store: Store) : IStateNotifier {
           Intents.ACTION_MUTE -> Event.MuteEvent()
           Intents.ACTION_DEMUTE -> Event.DemuteEvent()
           Intents.ACTION_SOUND_EXPIRED -> Event.Autosilenced(id)
-          Intents.ALARM_SNOOZE_ACTION ->
-              Event.SnoozedEvent(id, requireNotNull(calendar) { "SnoozedEvent requires calendar" })
+          Intents.ALARM_SNOOZE_ACTION -> Event.SnoozedEvent(id, requireNotNull(calendar) { "SnoozedEvent requires calendar" })
           Intents.ACTION_CANCEL_SNOOZE -> Event.CancelSnoozedEvent(id)
+          Intents.ALARM_PENALTY_ACTION -> Event.PenaltyEvent(id, requireNotNull(calendar) { "PenaltyEvent requires calendar" })
+          Intents.ACTION_CANCEL_PENALTY -> Event.CancelPenaltyEvent(id)
           Intents.ALARM_DISMISS_ACTION -> Event.DismissEvent(id)
           Intents.ALARM_SHOW_SKIP -> Event.ShowSkip(id)
           Intents.ALARM_REMOVE_SKIP -> Event.HideSkip(id)

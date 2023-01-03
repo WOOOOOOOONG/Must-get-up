@@ -28,6 +28,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.better.alarm.R
+import com.better.alarm.background.Event
 import com.better.alarm.background.Event.Autosilenced
 import com.better.alarm.background.Event.DemuteEvent
 import com.better.alarm.background.Event.DismissEvent
@@ -87,12 +88,16 @@ class AlarmAlertFullScreen : FragmentActivity() {
 
     turnScreenOn()
     updateLayout()
+      if (isPenaltyEnabled) {
+          mAlarm?.snooze()
+      }
 
     // Register to get the alarm killed/snooze/dismiss intent.
     subscription =
         store.events
             .filter { event ->
               (event is SnoozedEvent && event.id == id ||
+                  event is Event.PenaltyEvent && event.id == id ||
                   event is DismissEvent && event.id == id ||
                   event is Autosilenced && event.id == id)
             }
@@ -187,6 +192,7 @@ class AlarmAlertFullScreen : FragmentActivity() {
           timer.dispose()
           if (picked.isPresent()) {
             mAlarm?.snooze(picked.get().hour, picked.get().minute)
+            mAlarm?.penalty(picked.get().hour, picked.get().minute)
           } else {
             store.events.onNext(DemuteEvent())
           }
@@ -202,6 +208,8 @@ class AlarmAlertFullScreen : FragmentActivity() {
   private val isSnoozeEnabled: Boolean
     get() = sp.snoozeDuration.value != -1
 
+  private val isPenaltyEnabled: Boolean
+      get() = sp.penaltyDuration.value != -1
   /**
    * this is called when a second alarm is triggered while a previous alert window is still active.
    */

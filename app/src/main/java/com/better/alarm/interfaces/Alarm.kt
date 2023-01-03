@@ -7,6 +7,8 @@ interface Alarm {
   fun enable(enable: Boolean)
   fun snooze()
   fun snooze(hourOfDay: Int, minute: Int)
+  fun penalty()
+  fun penalty(hourOfDay: Int, minute: Int)
   fun dismiss()
   fun requestSkip()
   fun isSkipping(): Boolean
