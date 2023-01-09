@@ -36,3 +36,5 @@ Apache 2.0
 
 # Code coverage
 [![Codecov](https://codecov.io/gh/yuriykulikov/AlarmClock/branch/develop/graphs/tree.svg)](https://codecov.io/github/yuriykulikov/AlarmClock?branch=develop)
+
+
